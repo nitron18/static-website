@@ -15,32 +15,38 @@ pipeline {
             }
         }
 
-    stage('Upload to S3') {
-        steps {
-            script {
-                sh '''
-                    echo "Verifying files before upload..."
-                    ls -lah
+        stage('Upload to S3') {
+            steps {
+                script {
+                    sh '''
+                        echo "Verifying files before upload..."
+                        ls -lah
 
-                    # Ensure the files exist before zipping
-                    if [ ! -f "index.html" ] || [ ! -f "style.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
-                        echo "Error: Required files are missing!"
-                        exit 1
-                    fi
+                        # Install zip if not present
+                        if ! command -v zip &> /dev/null; then
+                            echo "zip is missing! Installing..."
+                            sudo apt update -y
+                            sudo apt install zip -y
+                        fi
 
-                    # Zip the files properly
-                    zip -r deploy.zip index.html style.css appspec.yml scripts/
+                        # Ensure correct filenames before zipping
+                        if [ ! -f "index.html" ] || [ ! -f "style.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
+                            echo "Error: Required files are missing!"
+                            exit 1
+                        fi
 
-                    # Verify zip creation
-                    ls -lah deploy.zip
+                        # Zip the files properly
+                        zip -r deploy.zip index.html style.css appspec.yml scripts/
 
-                    # Upload to S3
-                    aws s3 cp deploy.zip s3://my-codedeploy-bucket-3731/
-                '''
+                        # Verify zip creation
+                        ls -lah deploy.zip
+
+                        # Upload to S3
+                        aws s3 cp deploy.zip s3://$S3_BUCKET/
+                    '''
+                }
             }
         }
-    }
-
 
         stage('Trigger AWS CodeDeploy') {
             steps {
