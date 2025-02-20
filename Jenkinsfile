@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/nitron18/static-website.git'
+                git branch: 'main', credentialsId: 'github-ssh-key', url: 'https://github.com/nitron18/static-website.git'
             }
         }
 
