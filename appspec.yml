@@ -6,8 +6,8 @@ files:
 permissions:
   - object: /var/www/html
     pattern: "**"
-    owner: ubuntu
-    group: ubuntu
+    owner: www-data
+    group: www-data
 hooks:
   ApplicationStart:
     - location: scripts/start_server.sh
