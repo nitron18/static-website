@@ -23,7 +23,7 @@ pipeline {
                     ls -lah
 
                     # Ensure the files exist before zipping
-                    if [ ! -f "index.html" ] || [ ! -f "styles.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
+                    if [ ! -f "index.html" ] || [ ! -f "style.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
                         echo "Error: Required files are missing!"
                         exit 1
                     fi
@@ -35,7 +35,7 @@ pipeline {
                     ls -lah deploy.zip
 
                     # Upload to S3
-                    aws s3 cp deploy.zip s3://my-static-website-deployments/
+                    aws s3 cp deploy.zip s3://my-codedeploy-bucket-3731/
                 '''
             }
         }
