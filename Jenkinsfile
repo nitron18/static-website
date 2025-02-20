@@ -15,34 +15,23 @@ pipeline {
             }
         }
 
-        stage('Upload to S3') {
+        stage('Upload Files to S3') {
             steps {
                 script {
                     sh '''
-                        echo "Verifying files before upload..."
-                        ls -lah
-
-                        # Install zip if not present
-                        if ! command -v zip &> /dev/null; then
-                            echo "zip is missing! Installing..."
-                            sudo apt update -y
-                            sudo apt install zip -y
-                        fi
-
-                        # Ensure correct filenames before zipping
+                        echo "Uploading website files to S3..."
+                        
+                        # Ensure files exist
                         if [ ! -f "index.html" ] || [ ! -f "style.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
                             echo "Error: Required files are missing!"
                             exit 1
                         fi
 
-                        # Zip the files properly
-                        zip -r deploy.zip index.html style.css appspec.yml scripts/
-
-                        # Verify zip creation
-                        ls -lah deploy.zip
-
-                        # Upload to S3
-                        aws s3 cp deploy.zip s3://$S3_BUCKET/
+                        # Upload files directly to S3
+                        aws s3 cp index.html s3://$S3_BUCKET/
+                        aws s3 cp style.css s3://$S3_BUCKET/
+                        aws s3 cp appspec.yml s3://$S3_BUCKET/
+                        aws s3 cp --recursive scripts/ s3://$S3_BUCKET/scripts/
                     '''
                 }
             }
@@ -54,7 +43,7 @@ pipeline {
                     DEPLOY_ID=$(aws deploy create-deployment \
                       --application-name $CODEDEPLOY_APP \
                       --deployment-group-name $CODEDEPLOY_GROUP \
-                      --s3-location bucket=$S3_BUCKET,key=deploy.zip,bundleType=zip \
+                      --s3-location bucket=$S3_BUCKET,key=appspec.yml,bundleType=yaml \
                       --query "deploymentId" --output text)
 
                     echo "Triggered deployment: $DEPLOY_ID"

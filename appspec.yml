@@ -1,8 +1,10 @@
 version: 0.0
 os: linux
 files:
-  - source: /
-    destination: /var/www/html
+  - source: s3://my-codedeploy-bucket-3731/index.html
+    destination: /var/www/html/
+  - source: s3://my-codedeploy-bucket-3731/style.css
+    destination: /var/www/html/
 permissions:
   - object: /var/www/html
     pattern: "**"
