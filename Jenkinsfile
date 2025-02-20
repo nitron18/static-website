@@ -29,7 +29,7 @@ pipeline {
                     fi
 
                     # Zip the files properly
-                    zip -r deploy.zip index.html styles.css appspec.yml scripts/
+                    zip -r deploy.zip index.html style.css appspec.yml scripts/
 
                     # Verify zip creation
                     ls -lah deploy.zip
