@@ -15,11 +15,11 @@ pipeline {
             }
         }
 
-        stage('Upload Files to S3') {
+        stage('Package and Upload to S3') {
             steps {
                 script {
                     sh '''
-                        echo "Uploading website files to S3..."
+                        echo "Packaging website files..."
                         
                         # Ensure files exist
                         if [ ! -f "index.html" ] || [ ! -f "style.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
@@ -27,11 +27,11 @@ pipeline {
                             exit 1
                         fi
 
-                        # Upload files directly to S3
-                        aws s3 cp index.html s3://$S3_BUCKET/
-                        aws s3 cp style.css s3://$S3_BUCKET/
-                        aws s3 cp appspec.yml s3://$S3_BUCKET/
-                        aws s3 cp --recursive scripts/ s3://$S3_BUCKET/scripts/
+                        # Zip all files
+                        zip -r deploy.zip index.html style.css appspec.yml scripts/
+
+                        # Upload the zip file to S3
+                        aws s3 cp deploy.zip s3://$S3_BUCKET/
                     '''
                 }
             }
@@ -43,7 +43,7 @@ pipeline {
                     DEPLOY_ID=$(aws deploy create-deployment \
                       --application-name $CODEDEPLOY_APP \
                       --deployment-group-name $CODEDEPLOY_GROUP \
-                      --s3-location bucket=$S3_BUCKET,key=appspec.yml,bundleType=yaml \
+                      --s3-location bucket=$S3_BUCKET,key=deploy.zip,bundleType=zip \
                       --query "deploymentId" --output text)
 
                     echo "Triggered deployment: $DEPLOY_ID"
