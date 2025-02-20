@@ -15,14 +15,32 @@ pipeline {
             }
         }
 
-        stage('Upload to S3') {
-            steps {
+    stage('Upload to S3') {
+        steps {
+            script {
                 sh '''
+                    echo "Verifying files before upload..."
+                    ls -lah
+
+                    # Ensure the files exist before zipping
+                    if [ ! -f "index.html" ] || [ ! -f "styles.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
+                        echo "Error: Required files are missing!"
+                        exit 1
+                    fi
+
+                    # Zip the files properly
                     zip -r deploy.zip index.html styles.css appspec.yml scripts/
-                    aws s3 cp deploy.zip s3://$S3_BUCKET/
+
+                    # Verify zip creation
+                    ls -lah deploy.zip
+
+                    # Upload to S3
+                    aws s3 cp deploy.zip s3://my-static-website-deployments/
                 '''
             }
         }
+    }
+
 
         stage('Trigger AWS CodeDeploy') {
             steps {
