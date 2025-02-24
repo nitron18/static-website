@@ -20,18 +20,10 @@ pipeline {
                 script {
                     sh '''
                         echo "Packaging website files..."
-                        
-                        # Ensure files exist
-                        if [ ! -f "index.html" ] || [ ! -f "style.css" ] || [ ! -f "appspec.yml" ] || [ ! -d "scripts" ]; then
-                            echo "Error: Required files are missing!"
-                            exit 1
-                        fi
-
-                        # Zip all files
                         zip -r deploy.zip index.html style.css appspec.yml scripts/
 
-                        # Upload the zip file to S3
-                        aws s3 cp deploy.zip s3://$S3_BUCKET/
+                        echo "Uploading to S3..."
+                        aws s3 cp deploy.zip s3://my-codedeploy-bucket-3731/
                     '''
                 }
             }
@@ -39,15 +31,17 @@ pipeline {
 
         stage('Trigger AWS CodeDeploy') {
             steps {
-                sh '''
-                    DEPLOY_ID=$(aws deploy create-deployment \
-                      --application-name $CODEDEPLOY_APP \
-                      --deployment-group-name $CODEDEPLOY_GROUP \
-                      --s3-location bucket=$S3_BUCKET,key=deploy.zip,bundleType=zip \
-                      --query "deploymentId" --output text)
+                script {
+                    sh '''
+                        DEPLOY_ID=$(aws deploy create-deployment \
+                          --application-name $CODEDEPLOY_APP \
+                          --deployment-group-name $CODEDEPLOY_GROUP \
+                          --s3-location bucket=$S3_BUCKET,key=deploy.zip,bundleType=zip \
+                          --query "deploymentId" --output text)
 
-                    echo "Triggered deployment: $DEPLOY_ID"
-                '''
+                        echo "Triggered deployment: $DEPLOY_ID"
+                    '''
+                }
             }
         }
     }
